@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adiviná el color — qfadesign</title>
+<meta name="description" content="¿Qué tan preciso es tu ojo? Mirá un color, memorizalo y tratá de reconstruirlo.">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#f2f2f0;
+  --text:#111;
+  --muted:#777;
+  --border:#d4d4d0;
+  --blue:#2457ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;overflow-x:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Space Grotesk",sans-serif;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+
+.game{
+  width:min(100%,1100px);
+  min-height:100vh;
+  margin:auto;
+  padding:28px 40px 22px;
+  display:flex;
+  flex-direction:column;
+  text-align:center;
+}
+
+.header{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding-bottom:18px;
+}
+.game-title{
+  color:var(--blue);
+  font-size:clamp(24px,4vw,38px);
+  line-height:1;
+  letter-spacing:-1.5px;
+  font-weight:700;
+  margin:0;
+}
+
+.score{display:none}
+.intro,.result-screen,.final-screen{
+  width:min(100%,650px);
+  margin:auto;
+  padding:55px 0;
+}
+.eyebrow{
+  font-family:"DM Mono",monospace;
+  font-size:11px;
+  letter-spacing:2px;
+  color:var(--muted);
+  margin-bottom:25px;
+}
+.intro h1,.result-screen h2,.final-screen h2{
+  font-size:clamp(52px,8vw,92px);
+  line-height:.88;
+  letter-spacing:-5px;
+  margin-bottom:35px;
+}
+.description{
+  max-width:440px;
+  margin:0 auto 45px;
+  color:#555;
+  font-size:17px;
+  line-height:1.5;
+}
+.difficulty{margin-bottom:35px}
+.difficulty>p{
+  font-family:"DM Mono",monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin-bottom:10px;
+}
+.levels{display:flex;justify-content:center;gap:8px}
+.level{
+  background:transparent;
+  border:1px solid var(--border);
+  padding:11px 18px;
+  border-radius:30px;
+  color:var(--text);
+  transition:.2s;
+}
+.level.active{background:var(--text);border-color:var(--text);color:#fff}
+.primary-button{
+  width:100%;
+  max-width:360px;
+  margin-left:auto;
+  margin-right:auto;
+  border:0;
+  background:#111;
+  color:#fff;
+  padding:18px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-radius:3px;
+  font-weight:600;
+  transition:transform .2s;
+}
+.primary-button:hover{transform:translateY(-2px)}
+.primary-button span{font-size:20px}
+.hidden{display:none!important}
+
+.game-screen{
+  width:100%;
+  margin:auto;
+  padding:28px 0 40px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.game-top{
+  width:min(100%,620px);
+  display:grid;
+  grid-template-columns:1fr 76px 1fr;
+  grid-template-rows:auto 2px;
+  gap:8px 28px;
+  align-items:center;
+  margin-bottom:34px;
+}
+.round-info{text-align:left}
+.points-info{text-align:right}
+.game-top strong{
+  display:block;
+  margin-top:4px;
+  font-family:"DM Mono",monospace;
+  font-size:14px;
+}
+.small-label{
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:1px;
+}
+.timer-wrap{
+  grid-column:2;
+  grid-row:1;
+  display:flex;
+  justify-content:center;
+}
+.countdown{
+  width:48px;
+  height:48px;
+  border:1px solid var(--border);
+  border-radius:50%;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"DM Mono",monospace;
+  font-size:12px;
+}
+.progress{
+  grid-column:1 / -1;
+  grid-row:2;
+  height:2px;
+  background:var(--border);
+}
+.progress span{
+  display:block;
+  width:0;
+  height:100%;
+  background:#111;
+  transition:width .3s;
+}
+
+.color-area{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.target-wrapper{
+  position:relative;
+  width:min(68vw,520px);
+  max-width:520px;
+  aspect-ratio:1;
+}
+.target-color{
+  width:100%;
+  height:100%;
+  border-radius:4px;
+}
+.instruction{
+  margin-top:17px;
+  font-family:"DM Mono",monospace;
+  font-size:11px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.picker-area{width:min(100%,520px);margin:38px auto 0}
+.picker-preview{width:100%;height:90px;border-radius:3px;margin-bottom:25px}
+.hex-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.hex-row label{font-family:"DM Mono",monospace;font-size:11px}
+.hex-input-wrapper{display:flex;align-items:center;border-bottom:1px solid #111;padding-bottom:5px;font-family:"DM Mono",monospace}
+.hex-input-wrapper input{width:70px;border:0;outline:0;background:transparent;font-family:inherit;text-transform:uppercase}
+.sliders{margin-bottom:35px}
+.slider-row{margin-bottom:20px}
+.slider-label{display:flex;justify-content:space-between;font-family:"DM Mono",monospace;font-size:11px;margin-bottom:8px}
+.slider-label strong{font-weight:400;color:var(--muted)}
+input[type=range]{width:100%;appearance:none;height:2px;background:#bbb;outline:none}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;background:#111;border-radius:50%}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#111;border-radius:50%;border:0}
+
+.result-screen{text-align:center}
+.result-score{margin:40px 0}
+.result-score strong{display:block;font-size:clamp(80px,15vw,150px);line-height:.8;letter-spacing:-8px}
+.result-score span{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:2px;color:var(--muted)}
+.color-comparison{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:15px;margin-bottom:35px}
+.color-comparison>div:not(.difference){text-align:left}
+.color-comparison span{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:1px;color:var(--muted)}
+.result-color{width:100%;height:100px;margin:8px 0;border-radius:3px}
+.color-comparison code{font-family:"DM Mono",monospace;font-size:11px}
+.difference{font-family:"DM Mono",monospace;font-size:10px;color:var(--muted)}
+.result-message{font-size:18px;margin-bottom:35px}
+.final-score{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:35px;display:flex;justify-content:space-between;align-items:center;font-family:"DM Mono",monospace}
+.final-score span{font-size:10px;color:var(--muted)}
+.final-score strong{font-size:20px}
+
+.final-screen{text-align:center}
+.final-screen h2{margin-bottom:60px}
+.final-result{margin-bottom:30px}
+.final-result span,.final-average span{display:block;font-family:"DM Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:1px}
+.final-result strong{font-size:100px;letter-spacing:-6px}
+.final-average{margin-bottom:50px}
+.final-average strong{font-size:30px}
+.final-screen .primary-button{margin:auto}
+
+footer{
+  display:flex;
+  justify-content:center;
+  border-top:1px solid var(--border);
+  padding-top:15px;
+  margin-top:auto;
+  font-family:"DM Mono",monospace;
+  font-size:9px;
+  color:var(--muted);
+  letter-spacing:.5px;
+}
+footer span+span{display:none}
+
+@media(max-width:600px){
+  .game{padding:20px 18px 18px}
+  .game-title{font-size:28px}
+  .intro,.result-screen,.final-screen{padding:45px 0}
+  .intro h1,.result-screen h2,.final-screen h2{font-size:58px;letter-spacing:-3px}
+  .description{font-size:15px}
+  .game-screen{padding-top:22px}
+  .game-top{width:100%;grid-template-columns:1fr 58px 1fr;gap:8px 12px;margin-bottom:25px}
+  .target-wrapper{width:min(84vw,520px)}
+  .picker-area{margin-top:30px}
+  .color-comparison{grid-template-columns:1fr}
+  .difference{display:none}
+  .color-comparison>div:not(.difference){text-align:center}
+  .result-color{height:80px}
+}
+</style>
+</head>
+
+<body>
+<main class="game">
+<header class="header">
+  <h1 class="game-title">Adivina el color</h1>
+</header>
+
+<section class="intro" id="introScreen">
+<p class="eyebrow">UN JUEGO PARA DISEÑADORES</p>
+<h1>¿Qué tan preciso<br>es tu ojo?</h1>
+<p class="description">Un color aparece durante unos segundos. Después desaparece. Tu trabajo es reconstruirlo.</p>
+<div class="difficulty">
+<p>NIVEL</p>
+<div class="levels">
+<button class="level active" data-level="easy">Fácil</button>
+<button class="level" data-level="medium">Medio</button>
+<button class="level" data-level="hard">Difícil</button>
+</div>
+</div>
+<button class="primary-button" id="startButton">Empezar <span>→</span></button>
+</section>
+
+<section class="game-screen hidden" id="gameScreen">
+<div class="game-top">
+  <div class="round-info">
+    <span class="small-label">RONDA</span>
+    <strong id="roundNumber">01</strong>
+  </div>
+
+  <div class="timer-wrap">
+    <div class="countdown" id="countdown">3.0</div>
+  </div>
+
+  <div class="points-info">
+    <span class="small-label">PUNTOS</span>
+    <strong id="currentScore">0</strong>
+  </div>
+
+  <div class="progress"><span id="progressBar"></span></div>
+</div>
+
+<div class="color-area">
+<div class="target-wrapper">
+  <div class="target-color" id="targetColor"></div>
+</div>
+<p class="instruction" id="instruction">Memorizá este color.</p>
+</div>
+
+<div class="picker-area hidden" id="pickerArea">
+<div class="picker-preview" id="pickerPreview"></div>
+<div class="hex-row"><label for="hexInput">HEX</label><div class="hex-input-wrapper"><span>#</span><input id="hexInput" type="text" maxlength="6" value="000000" autocomplete="off"></div></div>
+<div class="sliders">
+<div class="slider-row"><div class="slider-label"><span>H</span><strong id="hValue">0°</strong></div><input type="range" id="hSlider" min="0" max="360" value="0"></div>
+<div class="slider-row"><div class="slider-label"><span>S</span><strong id="sValue">0%</strong></div><input type="range" id="sSlider" min="0" max="100" value="0"></div>
+<div class="slider-row"><div class="slider-label"><span>L</span><strong id="lValue">0%</strong></div><input type="range" id="lSlider" min="0" max="100" value="0"></div>
+</div>
+<button class="primary-button confirm-button" id="confirmButton">Confirmar color <span>→</span></button>
+</div>
+</section>
+
+<section class="result-screen hidden" id="resultScreen">
+<p class="eyebrow">RESULTADO</p>
+<div class="result-score"><strong id="resultPercentage">0%</strong><span>DE SIMILITUD</span></div>
+<div class="color-comparison">
+<div><span>ORIGINAL</span><div class="result-color" id="originalResult"></div><code id="originalHex">#000000</code></div>
+<div class="difference">VS</div>
+<div><span>TU COLOR</span><div class="result-color" id="userResult"></div><code id="userHex">#000000</code></div>
+</div>
+<div class="result-message" id="resultMessage"></div>
+<div class="final-score"><span>PUNTOS DE ESTA RONDA</span><strong id="roundPoints">0</strong></div>
+<button class="primary-button" id="nextButton">Siguiente color <span>→</span></button>
+</section>
+
+<section class="final-screen hidden" id="finalScreen">
+<p class="eyebrow">JUEGO TERMINADO</p>
+<h2>Tu ojo<br>tiene memoria.</h2>
+<div class="final-result"><span>PUNTUACIÓN FINAL</span><strong id="finalScore">0</strong></div>
+<div class="final-average"><span>PROMEDIO</span><strong id="averageScore">0%</strong></div>
+<button class="primary-button" id="restartButton">Jugar de nuevo <span>↻</span></button>
+</section>
+
+<footer><span>qfadesign</span><span>Diseño · Comunicación Visual</span></footer>
+</main>
+
+<script>
+const TOTAL_ROUNDS=5;
+const difficulties={easy:{showTime:3000},medium:{showTime:2000},hard:{showTime:1200}};
+let difficulty="easy",currentRound=0,totalScore=0,roundScores=[],targetColor=null,userColor={h:0,s:0,l:0},countdownTimer;
+
+const $=id=>document.getElementById(id);
+const introScreen=$("introScreen"),gameScreen=$("gameScreen"),resultScreen=$("resultScreen"),finalScreen=$("finalScreen");
+const startButton=$("startButton"),nextButton=$("nextButton"),restartButton=$("restartButton"),confirmButton=$("confirmButton");
+const targetColorElement=$("targetColor"),pickerArea=$("pickerArea"),pickerPreview=$("pickerPreview"),countdown=$("countdown"),instruction=$("instruction");
+const roundNumber=$("roundNumber"),currentScore=$("currentScore"),progressBar=$("progressBar");
+const hSlider=$("hSlider"),sSlider=$("sSlider"),lSlider=$("lSlider"),hValue=$("hValue"),sValue=$("sValue"),lValue=$("lValue"),hexInput=$("hexInput");
+const resultPercentage=$("resultPercentage"),originalResult=$("originalResult"),userResult=$("userResult"),originalHex=$("originalHex"),userHex=$("userHex"),resultMessage=$("resultMessage"),roundPoints=$("roundPoints");
+const finalScore=$("finalScore"),averageScore=$("averageScore"),bestScoreElement=$("bestScore");
+
+let bestScore=Number(localStorage.getItem("qfaColorBest"))||0;
+bestScoreElement.textContent=bestScore;
+
+document.querySelectorAll(".level").forEach(button=>button.addEventListener("click",()=>{
+document.querySelectorAll(".level").forEach(item=>item.classList.remove("active"));
+button.classList.add("active");difficulty=button.dataset.level;
+}));
+
+startButton.addEventListener("click",startGame);
+function startGame(){currentRound=0;totalScore=0;roundScores=[];introScreen.classList.add("hidden");resultScreen.classList.add("hidden");finalScreen.classList.add("hidden");gameScreen.classList.remove("hidden");startRound()}
+
+function startRound(){
+clearInterval(countdownTimer);currentRound++;pickerArea.classList.add("hidden");targetColorElement.classList.remove("hidden");
+roundNumber.textContent=String(currentRound).padStart(2,"0");currentScore.textContent=totalScore;
+progressBar.style.width=`${((currentRound-1)/TOTAL_ROUNDS)*100}%`;
+targetColor=generateColor();targetColorElement.style.background=hslToCss(targetColor.h,targetColor.s,targetColor.l);
+instruction.textContent="Memorizá este color.";showColor();
+}
+
+function showColor(){
+let remaining=difficulties[difficulty].showTime/1000;countdown.textContent=remaining.toFixed(1);
+countdownTimer=setInterval(()=>{remaining-=.1;if(remaining<=0){clearInterval(countdownTimer);countdown.textContent="";hideColor();return}countdown.textContent=remaining.toFixed(1)},100);
+}
+function hideColor(){targetColorElement.classList.add("hidden");pickerArea.classList.remove("hidden");instruction.textContent="Reconstruí el color que acabás de ver.";resetPicker()}
+function generateColor(){return{h:Math.floor(Math.random()*361),s:Math.floor(Math.random()*71)+20,l:Math.floor(Math.random()*51)+25}}
+
+[hSlider,sSlider,lSlider].forEach(slider=>slider.addEventListener("input",updatePicker));
+function updatePicker(){
+userColor={h:Number(hSlider.value),s:Number(sSlider.value),l:Number(lSlider.value)};
+hValue.textContent=`${userColor.h}°`;sValue.textContent=`${userColor.s}%`;lValue.textContent=`${userColor.l}%`;
+pickerPreview.style.background=hslToCss(userColor.h,userColor.s,userColor.l);
+hexInput.value=rgbToHex(...hslToRgb(userColor.h,userColor.s,userColor.l)).replace("#","").toUpperCase();
+}
+hexInput.addEventListener("input",()=>{
+let value=hexInput.value.replace(/[^0-9a-fA-F]/g,"").slice(0,6);hexInput.value=value.toUpperCase();
+if(value.length===6){const rgb=hexToRgb("#"+value),hsl=rgbToHsl(rgb.r,rgb.g,rgb.b);userColor=hsl;hSlider.value=hsl.h;sSlider.value=hsl.s;lSlider.value=hsl.l;updatePicker()}
+});
+function resetPicker(){hSlider.value=0;sSlider.value=0;lSlider.value=0;hexInput.value="000000";updatePicker()}
+
+confirmButton.addEventListener("click",()=>{
+const similarity=calculateSimilarity(targetColor,userColor),points=Math.round(similarity);
+roundScores.push(points);totalScore+=points;showResult(similarity,points);
+});
+
+function showResult(similarity,points){
+gameScreen.classList.add("hidden");resultScreen.classList.remove("hidden");
+const original=hslToCss(targetColor.h,targetColor.s,targetColor.l),user=hslToCss(userColor.h,userColor.s,userColor.l);
+resultPercentage.textContent=`${Math.round(similarity)}%`;originalResult.style.background=original;userResult.style.background=user;
+originalHex.textContent=hslToHex(targetColor);userHex.textContent=hslToHex(userColor);roundPoints.textContent=points;resultMessage.textContent=getResultMessage(similarity);
+nextButton.innerHTML=currentRound>=TOTAL_ROUNDS?`Ver resultado final <span>→</span>`:`Siguiente color <span>→</span>`;
+}
+
+nextButton.addEventListener("click",()=>{
+if(currentRound>=TOTAL_ROUNDS)finishGame();else{resultScreen.classList.add("hidden");gameScreen.classList.remove("hidden");startRound()}
+});
+function finishGame(){
+resultScreen.classList.add("hidden");gameScreen.classList.add("hidden");finalScreen.classList.remove("hidden");
+finalScore.textContent=totalScore;averageScore.textContent=`${Math.round(totalScore/TOTAL_ROUNDS)}%`;
+if(totalScore>bestScore){bestScore=totalScore;localStorage.setItem("qfaColorBest",bestScore)}
+bestScoreElement.textContent=bestScore;
+}
+restartButton.addEventListener("click",()=>{finalScreen.classList.add("hidden");startGame()});
+
+function calculateSimilarity(a,b){
+const hueDifference=Math.min(Math.abs(a.h-b.h),360-Math.abs(a.h-b.h))/180;
+const saturationDifference=Math.abs(a.s-b.s)/100,lightnessDifference=Math.abs(a.l-b.l)/100;
+const distance=hueDifference*.5+saturationDifference*.25+lightnessDifference*.25;
+return Math.max(0,Math.min(100,100*(1-distance)));
+}
+function getResultMessage(score){
+if(score>=98)return"Casi perfecto. Tu ojo estuvo muy preciso.";
+if(score>=90)return"Muy cerca. Se nota que mirás el color con atención.";
+if(score>=80)return"Buen ojo. La diferencia fue bastante pequeña.";
+if(score>=65)return"No estuvo mal. Pero hay margen para afinar.";
+if(score>=45)return"Tu memoria cromática te jugó una mala pasada.";
+return"Ese color se escapó bastante. ¿Probamos otra vez?";
+}
+function hslToCss(h,s,l){return`hsl(${h}, ${s}%, ${l}%)`}
+function hslToRgb(h,s,l){
+s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+return[Math.round(f(0)*255),Math.round(f(8)*255),Math.round(f(4)*255)]
+}
+function rgbToHsl(r,g,b){
+r/=255;g/=255;b/=255;const max=Math.max(r,g,b),min=Math.min(r,g,b);let h=0,s=0;const l=(max+min)/2;
+if(max!==min){const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break}h/=6}
+return{h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)}
+}
+function rgbToHex(r,g,b){return"#"+[r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function hexToRgb(hex){const value=hex.replace("#","");return{r:parseInt(value.substring(0,2),16),g:parseInt(value.substring(2,4),16),b:parseInt(value.substring(4,6),16)}}
+function hslToHex(hsl){return rgbToHex(...hslToRgb(hsl.h,hsl.s,hsl.l)).toUpperCase()}
+</script>
+</body>
+</html>
