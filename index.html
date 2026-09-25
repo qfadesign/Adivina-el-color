@@ -68,57 +68,8 @@ const getUserColor=()=>({r:Number(ranges.r.value),g:Number(ranges.g.value),b:Num
 function showOnly(el){[introScreen,gameScreen,resultScreen,finalScreen].forEach(x=>x.classList.add('hidden'));el.classList.remove('hidden')}
 document.querySelectorAll('.diff-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');difficulty=btn.dataset.difficulty}));
 Object.keys(ranges).forEach(k=>{ranges[k].addEventListener('input',()=>{values[k].value=ranges[k].value;setUserColor(getUserColor())});values[k].addEventListener('input',()=>{let v=Math.max(0,Math.min(255,Number(values[k].value)||0));values[k].value=v;ranges[k].value=v;setUserColor(getUserColor())})});
-function startRound(){
-    locked = false;
-    currentRound++;
-    roundEl.textContent = currentRound;
-    target = randomColor();
-
-    targetColor.style.background = rgb(target);
-    targetColor.style.opacity = '1';
-    $('targetLabel').textContent = 'Memorizá este color';
-    targetPreview.style.background = '#fff';
-    $('targetHex').textContent = 'Oculto hasta responder';
-
-    messageEl.textContent = 'Memorizá el color…';
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = '.5';
-
-    const total = memorizeTimes[difficulty];
-    let remaining = total;
-    timerEl.textContent = Number.isInteger(total) ? total : total.toFixed(1);
-
-    clearInterval(countdown);
-    countdown = setInterval(() => {
-      remaining = Math.max(0, remaining - 0.1);
-      timerEl.textContent = remaining <= 0 ? '0' : remaining < 1 ? remaining.toFixed(1) : Math.ceil(remaining);
-
-      if(remaining <= 0){
-        clearInterval(countdown);
-
-        targetColor.style.background = rgb(getUserColor());
-        $('targetLabel').textContent = 'Recreá el color';
-        messageEl.textContent = 'Tenés 20 segundos para recrearlo.';
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = '1';
-
-        let recreateRemaining = recreationTime;
-        timerEl.textContent = recreateRemaining;
-
-        countdown = setInterval(() => {
-          recreateRemaining--;
-          timerEl.textContent = Math.max(0, recreateRemaining);
-
-          if(recreateRemaining <= 0){
-            clearInterval(countdown);
-            check();
-          }
-        }, 1000);
-      }
-    }, 100);
-  }
-
-  function startGame(){score=0;currentRound=0;scoreEl.textContent='0';showOnly(gameScreen);setUserColor({r:128,g:128,b:128});startRound()}
+function startRound(){locked=false;currentRound++;roundEl.textContent=currentRound;target=randomColor();targetColor.style.background=rgb(target);targetPreview.style.background='#fff';$('targetHex').textContent='Oculto hasta responder';messageEl.textContent='Memorizá el color…';submitBtn.disabled=true;const total=times[difficulty];let remaining=total;timerEl.textContent=Number.isInteger(total)?total:total.toFixed(1);clearInterval(countdown);countdown=setInterval(()=>{remaining=Math.max(0,remaining-.1);timerEl.textContent=remaining<=0?'0':remaining<1?remaining.toFixed(1):Math.ceil(remaining);if(remaining<=0){clearInterval(countdown);targetColor.style.background='var(--bg)';messageEl.textContent='Ahora recreá el color con RGB.';submitBtn.disabled=false}},100)}
+function startGame(){score=0;currentRound=0;scoreEl.textContent='0';showOnly(gameScreen);setUserColor({r:128,g:128,b:128});startRound()}
 function check(){if(locked||submitBtn.disabled)return;locked=true;const user=getUserColor(),sim=similarity(target,user),earned=Math.round(sim*10);score+=earned;scoreEl.textContent=score;similarityEl.textContent=`${sim}%`;resultText.textContent=sim>=95?'Tu ojo estuvo muy preciso.':sim>=80?'Muy cerca. Hay buen ojo para el color.':sim>=60?'Bastante cerca. Todavía podés afinarlo.':'Esta vez hubo bastante diferencia.';resultUserColor.style.background=rgb(user);resultTargetColor.style.background=rgb(target);targetPreview.style.background=rgb(target);$('targetHex').textContent=`${rgb(target)} · ${hex(target)}`;showOnly(resultScreen)}
 startBtn.addEventListener('click',startGame);submitBtn.addEventListener('click',check);nextBtn.addEventListener('click',()=>{if(currentRound>=rounds){finalScoreEl.textContent=score;showOnly(finalScreen)}else{showOnly(gameScreen);setUserColor({r:128,g:128,b:128});startRound()}});restartBtn.addEventListener('click',startGame);setUserColor({r:128,g:128,b:128});
 })();
