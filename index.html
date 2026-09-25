@@ -34,7 +34,7 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:23px;height:23px;b
 <main class="screen">
 <section id="introScreen" class="card intro">
 <h2>¿Qué tan preciso es tu ojo?</h2><p>Observá un color durante unos segundos y después intentá recrearlo usando los controles RGB.</p>
-<div class="difficulty"><button class="diff-btn active" data-difficulty="easy" type="button">Fácil · 3s</button><button class="diff-btn" data-difficulty="medium" type="button">Medio · 2s</button><button class="diff-btn" data-difficulty="hard" type="button">Difícil · 1,2s</button></div>
+<div class="difficulty"><button class="diff-btn active" data-difficulty="easy" type="button">Fácil · 3s + 10s</button><button class="diff-btn" data-difficulty="medium" type="button">Medio · 2s + 7s</button><button class="diff-btn" data-difficulty="hard" type="button">Difícil · 1,2s + 5s</button></div>
 <div class="actions"><button id="startBtn" class="primary" type="button">Empezar</button></div>
 </section>
 <section id="gameScreen" class="screen hidden">
@@ -119,7 +119,7 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:23px;height:23px;b
   let locked=false;
 
   const times={easy:3,medium:2,hard:1.2};
-  const COPY_TIME=10;
+  const copyTimes={easy:10,medium:7,hard:5};
 
   const rgb=c=>`rgb(${c.r}, ${c.g}, ${c.b})`;
   const hex=c=>'#'+[c.r,c.g,c.b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
@@ -177,10 +177,11 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:23px;height:23px;b
     memoryCard.classList.add('hidden');
     copyCard.classList.remove('hidden');
 
-    copyMessage.textContent='Tenés 10 segundos para copiarlo.';
+    const copyTime=copyTimes[difficulty];
+    copyMessage.textContent=`Tenés ${copyTime} segundos para copiarlo.`;
     submitBtn.disabled=false;
 
-    let remaining=COPY_TIME;
+    let remaining=copyTime;
     timerEl.textContent=remaining;
 
     clearTimer();
